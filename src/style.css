@@ -1,0 +1,25 @@
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+.field {
+  margin-bottom: 11px;
+}
+.lable {
+  margin-right: 10px;
+}
+.space {
+  margin-right: 6px;
+  padding-right: 3px;
+}
+
+.errormassege {
+  font-size: 14px;
+  color: rgb(170, 13, 13);
+}
+.filter {
+  height: 2.5rem;
+  width: 6rem;
+  cursor: pointer;
+}
