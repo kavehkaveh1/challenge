@@ -158,6 +158,9 @@ const DataTable = () => {
               value={selectedWorkType}
               onChange={(e) => setSelectedWorkType(e.target.value)}
             >
+              <option value="" disabled>
+                Select Work Type
+              </option>
               <option value="Part time">Part time</option>
               <option value="Full time">Full time</option>
               <option value="Freelance">Freelance</option>
