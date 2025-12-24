@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import ShowTableItem from "./ShowTableItem";
-import Popup from "./popup";
+import Popup from "./popUp";
 import useDelete from "../costumHook/useDelete";
 import { useDispatch, useSelector } from "react-redux";
 import { deleteItem, setData } from "../redux/dataSlice";

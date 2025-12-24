@@ -1,8 +1,8 @@
-import Form from "./component/Form";
+import Form from "./components/Form";
 import "./style.css";
 import { Routes, Route, Navigate } from "react-router-dom";
-import DataTable from "./component/DataTable";
-import NotFound from "./component/notFound";
+import DataTable from "./components/DataTable";
+import NotFound from "./components/notFound";
 import { Box } from "@mui/material";
 
 const App = () => {

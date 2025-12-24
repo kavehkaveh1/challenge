@@ -1,5 +1,5 @@
 import { createSlice, type PayloadAction } from "@reduxjs/toolkit";
-import { type FormItem } from "../component/DataTable";
+import { type FormItem } from "../components/DataTable";
 
 type DataState = { items: FormItem[] };
 
