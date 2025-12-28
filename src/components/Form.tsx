@@ -1,10 +1,25 @@
-import { useForm, type SubmitHandler } from "react-hook-form";
+import { Controller, useForm, type SubmitHandler } from "react-hook-form";
 import { useNavigate, useParams } from "react-router-dom";
 import { useSelector, useDispatch } from "react-redux";
 import { type RootState, type AppDispatch } from "../redux/store";
 import { useEffect } from "react";
 import { addItem, updateItem } from "../redux/dataSlice";
-import { Button, Stack } from "@mui/material";
+import {
+  Button,
+  Checkbox,
+  FormControl,
+  FormControlLabel,
+  FormGroup,
+  FormHelperText,
+  FormLabel,
+  InputLabel,
+  MenuItem,
+  Radio,
+  RadioGroup,
+  Select,
+  Stack,
+  TextField,
+} from "@mui/material";
 import SendIcon from "@mui/icons-material/Send";
 import CancelIcon from "@mui/icons-material/Cancel";
 import Box from "@mui/material/Box";
@@ -31,8 +46,13 @@ const Form = () => {
     register,
     handleSubmit,
     reset,
+    control,
     formState: { errors },
-  } = useForm<FormValuesType>();
+  } = useForm<FormValuesType>({
+    defaultValues: {
+      workType: [],
+    },
+  });
 
   type Mode = "create" | "edit" | "view";
 
@@ -88,6 +108,18 @@ const Form = () => {
     }
   }, [isView, id, isEdit]);
 
+  const handleCheckbox =
+    (field: any, value: string) =>
+    (event: React.ChangeEvent<HTMLInputElement>) => {
+      const checked = event.target.checked;
+
+      field.onChange(
+        checked
+          ? [...(field.value || []), value]
+          : (field.value || []).filter((v: string) => v !== value)
+      );
+    };
+
   return (
     <Box
       sx={{
@@ -103,11 +135,12 @@ const Form = () => {
           boxSizing: "border-box",
           border: "2px solid white",
           borderRadius: 3,
-          background: "linear-gradient(#6d9bd7, #9762bf)",
+          backgroundColor: "white",
+
           p: 2,
           width: {
-            xs: "300px",
-            sm: "330px",
+            xs: "330px",
+            sm: "400px",
             md: "700px",
           },
           height: "auto",
@@ -118,7 +151,8 @@ const Form = () => {
             sx={{
               display: "grid",
               gap: {
-                md: "12px",
+                xs: "4px",
+                md: "1.3rem",
               },
               gridTemplateColumns: {
                 xs: "repeat(1,1fr)",
@@ -126,12 +160,11 @@ const Form = () => {
               },
             }}
           >
-            <div className="field">
-              <label htmlFor="FirstName " className="lable">
-                First Name :
-              </label>
-              <input
-                type="text"
+            <Box sx={{ display: "flex", gap: "10px" }}>
+              <TextField
+                size="small"
+                label="FirstName"
+                fullWidth
                 {...register("FirstName", {
                   required: "FirstName is required",
                   pattern: {
@@ -139,17 +172,14 @@ const Form = () => {
                     message: " Please enter a valid name using letters only.",
                   },
                 })}
-                id="FirstName"
+                error={!!errors.FirstName}
+                helperText={errors.FirstName?.message}
                 disabled={isView}
               />
-              {<div className="errormassege">{errors.FirstName?.message}</div>}
-            </div>
-            <div className="field">
-              <label htmlFor="LastName " className="lable">
-                Last Name :
-              </label>
-              <input
-                type="text"
+              <TextField
+                size="small"
+                label="LastName"
+                fullWidth
                 {...register("LastName", {
                   required: "LastName is required",
                   pattern: {
@@ -157,218 +187,273 @@ const Form = () => {
                     message: " Please enter a valid name using letters only.",
                   },
                 })}
-                id="LastName"
+                error={!!errors.LastName}
+                helperText={errors.LastName?.message}
                 disabled={isView}
               />
-              {<div className="errormassege">{errors.LastName?.message}</div>}
-            </div>
-            <div className="field">
-              <label htmlFor="age " className="lable">
-                Age :
-              </label>
-              <input
-                type="number"
-                {...register("age", {
-                  required: "Age is required",
-                })}
-                id="age"
-                disabled={isView}
-              />
-              {<div className="errormassege">{errors.age?.message}</div>}
-            </div>
-            <div className="field">
-              <span className="lable">Gender :</span>
+            </Box>
 
-              <input
-                type="radio"
-                value="female"
-                {...register("gender", {
-                  required: "Gender is required",
-                })}
-                id="female"
-                disabled={isView}
-              />
-              <label htmlFor="female" className="space">
-                Female
-              </label>
+            <TextField
+              size="small"
+              type="number"
+              label="Age"
+              fullWidth
+              {...register("age", {
+                required: "Age is required",
+              })}
+              error={!!errors.age}
+              helperText={errors.age?.message}
+              disabled={isView}
+            />
 
-              <input
-                value="male"
-                type="radio"
-                {...register("gender", {
-                  required: "Gender is required",
-                })}
-                id="male"
-                disabled={isView}
-              />
-              <label htmlFor="male">Male</label>
-              {<div className="errormassege">{errors.gender?.message}</div>}
-            </div>
-            <div className="field">
-              <label htmlFor="birtdate " className="lable">
-                Birtdate :
-              </label>
-              <input
-                type="date"
-                {...register("birthdate", {
-                  required: "Birtdate is required",
-                })}
-                id="birtdate"
-                disabled={isView}
-              />
-              {<div className="errormassege">{errors.birthdate?.message}</div>}
-            </div>
-            <div className="field">
-              <label htmlFor="country" className="lable">
-                Country :
-              </label>
-              <select
-                defaultValue=""
-                {...register("country", {
-                  required: "Country is required",
-                })}
-                id="country"
-                disabled={isView}
+            <FormControl error={!!errors.gender} disabled={isView} fullWidth>
+              <Stack
+                sx={{
+                  display: "flex",
+                  flexDirection: "row",
+                  justifyContent: "start",
+                  alignItems: "center",
+                }}
               >
-                <option value="" disabled>
-                  Select a country
-                </option>
-                <option value="Canada">Canada</option>
-                <option value="USA">USA</option>
-                <option value="Spain">Spain</option>
-                <option value="Greece">Greece</option>
-                <option value="Germany">Germany</option>
-              </select>
-              {<div className="errormassege">{errors.country?.message}</div>}
-            </div>
-            <div className="field">
-              <label htmlFor="city" className="lable">
-                City :
-              </label>
-              <select
-                defaultValue=""
-                {...register("city", {
-                  required: "City is required",
-                })}
-                id="city"
+                <FormLabel>Gender</FormLabel>
+                <Controller
+                  name="gender"
+                  control={control}
+                  rules={{ required: "Gender is required" }}
+                  render={({ field }) => (
+                    <RadioGroup row {...field} value={field.value ?? ""}>
+                      <FormControlLabel
+                        sx={{
+                          paddingLeft: 4,
+                        }}
+                        value="female"
+                        control={<Radio />}
+                        label="Female"
+                      />
+                      <FormControlLabel
+                        value="male"
+                        control={<Radio />}
+                        label="Male"
+                      />
+                    </RadioGroup>
+                  )}
+                />
+              </Stack>
+
+              {errors.gender && (
+                <FormHelperText sx={{ paddingBottom: "3px" }}>
+                  {errors.gender?.message}
+                </FormHelperText>
+              )}
+            </FormControl>
+
+            <TextField
+              size="small"
+              label="Birtdate"
+              fullWidth
+              type="date"
+              slotProps={{ inputLabel: { shrink: true } }}
+              {...register("birthdate", {
+                required: "Birthdate is required",
+              })}
+              error={!!errors.birthdate}
+              helperText={errors.birthdate?.message}
+              disabled={isView}
+            />
+
+            <Box sx={{ display: "flex", gap: "5px" }}>
+              <FormControl
+                error={!!errors.country}
                 disabled={isView}
+                fullWidth
+                size="small"
               >
-                <option value="" disabled>
-                  Select a city
-                </option>
-                <option value="Toronto">Toronto</option>
-                <option value="New York">New York</option>
-                <option value="Madrid">Madrid</option>
-                <option value="Athens">Athens</option>
-                <option value="Berlin">Berlin</option>
-              </select>
-              {<div className="errormassege">{errors.city?.message}</div>}
-            </div>
-            <div className="field">
-              <label htmlFor="job" className="lable">
-                Job Title :
-              </label>
-              <select
-                defaultValue=""
-                {...register("job", {
-                  required: "Job Title is required",
-                })}
-                id="job"
+                <InputLabel id="country-lable">Country</InputLabel>
+                <Controller
+                  name="country"
+                  control={control}
+                  rules={{ required: "Country is required" }}
+                  render={({ field }) => (
+                    <Select
+                      {...field}
+                      value={field.value ?? ""}
+                      labelId="country-lable"
+                      label="Country"
+                    >
+                      <MenuItem value="Canada">Canada</MenuItem>
+                      <MenuItem value="USA">USA</MenuItem>
+                      <MenuItem value="Spain">Spain</MenuItem>
+                      <MenuItem value="Greece">Greece</MenuItem>
+                      <MenuItem value="Germany">Germany</MenuItem>
+                    </Select>
+                  )}
+                />
+                {errors.gender && (
+                  <FormHelperText>{errors.country?.message}</FormHelperText>
+                )}
+              </FormControl>
+
+              <FormControl
+                error={!!errors.city}
                 disabled={isView}
+                fullWidth
+                size="small"
               >
-                <option value="" disabled>
-                  Select a job
-                </option>
-                <option value="frontend">frontend</option>
-                <option value="backend">backend</option>
-                <option value="designer">designer</option>
-                <option value="accountant">accountant</option>
-                <option value="HR">HR</option>
-              </select>
-              {<div className="errormassege">{errors.job?.message}</div>}
-            </div>
-            <div className="field">
-              <label htmlFor="PhoneNumber " className="lable">
-                Phone Number :
-              </label>
-              <input
-                type="text"
-                {...register("PhoneNumber", {
-                  required: "PhoneNumber is required",
-                  pattern: {
-                    value: /^\+?\d{10,15}$/,
-                    message: "Invalid phone number format",
-                  },
-                })}
-                id="PhoneNumber"
-                disabled={isView}
-              />
-              {
-                <div className="errormassege">
-                  {errors.PhoneNumber?.message}
-                </div>
-              }
-            </div>
-            <div className="field work">
-              <p style={{ marginBottom: "4px" }}>Work type : </p>
+                <InputLabel id="city-lable">City</InputLabel>
+                <Controller
+                  name="city"
+                  control={control}
+                  rules={{ required: "City is required" }}
+                  render={({ field }) => (
+                    <Select
+                      {...field}
+                      value={field.value ?? ""}
+                      labelId="city-lable"
+                      label="City"
+                    >
+                      <MenuItem value="Toronto">Toronto</MenuItem>
+                      <MenuItem value="New York">New York</MenuItem>
+                      <MenuItem value="Madrid">Madrid</MenuItem>
+                      <MenuItem value="Athens">Athens</MenuItem>
+                      <MenuItem value="Berlin">Berlin</MenuItem>
+                    </Select>
+                  )}
+                />
+                {errors.gender && (
+                  <FormHelperText>{errors.city?.message}</FormHelperText>
+                )}
+              </FormControl>
 
-              <input
-                type="checkbox"
-                {...register("workType")}
-                value="Part time"
-                id="Part"
+              <FormControl
+                error={!!errors.job}
                 disabled={isView}
-              />
-              <label htmlFor="Part" className="space">
-                Part time
-              </label>
+                fullWidth
+                size="small"
+              >
+                <InputLabel id="job-lable">Job</InputLabel>
+                <Controller
+                  name="job"
+                  control={control}
+                  rules={{ required: "Job is required" }}
+                  render={({ field }) => (
+                    <Select
+                      {...field}
+                      value={field.value ?? ""}
+                      labelId="job-lable"
+                      label="Job"
+                    >
+                      <MenuItem value="frontend">frontend</MenuItem>
+                      <MenuItem value="backend">backend</MenuItem>
+                      <MenuItem value="designer">designer</MenuItem>
+                      <MenuItem value="accountant">accountant</MenuItem>
+                      <MenuItem value="HR">HR</MenuItem>
+                    </Select>
+                  )}
+                />
+                {errors.gender && (
+                  <FormHelperText>{errors.job?.message}</FormHelperText>
+                )}
+              </FormControl>
+            </Box>
 
-              <input
-                type="checkbox"
-                {...register("workType")}
-                value="Full time"
-                id="Full"
-                disabled={isView}
-              />
-              <label htmlFor="Full" className="space">
-                Full time
-              </label>
+            <TextField
+              size="small"
+              label="PhoneNumber"
+              fullWidth
+              {...register("PhoneNumber", {
+                required: "PhoneNumber is required",
+                pattern: {
+                  value: /^\+?\d{10,15}$/,
+                  message: "Invalid phone number format",
+                },
+              })}
+              error={!!errors.PhoneNumber}
+              helperText={errors.PhoneNumber?.message}
+              disabled={isView}
+            />
 
-              <input
-                type="checkbox"
-                {...register("workType")}
-                value="Freelance"
-                id="Freelance"
-                disabled={isView}
+            <FormControl fullWidth disabled={isView} size="small">
+              <FormLabel>Work Type</FormLabel>
+              <Controller
+                name="workType"
+                control={control}
+                render={({ field }) => (
+                  <FormGroup row>
+                    <FormControlLabel
+                      sx={{
+                        padding: "0px",
+                        margin: "0px",
+                      }}
+                      label="Part time"
+                      control={
+                        <Checkbox
+                          sx={{
+                            padding: { xs: "0px", sm: "7px", md: "6px" },
+                            margin: "0px",
+                          }}
+                          checked={field.value?.includes("Part time")}
+                          onChange={handleCheckbox(field, "Part time")}
+                        />
+                      }
+                    />
+                    <FormControlLabel
+                      sx={{
+                        padding: "0px",
+                        margin: "0px",
+                      }}
+                      label="Full time"
+                      control={
+                        <Checkbox
+                          sx={{
+                            padding: { xs: "0px", sm: "7px", md: "6px" },
+                            margin: "0px",
+                          }}
+                          checked={field.value?.includes("Full time")}
+                          onChange={handleCheckbox(field, "Full time")}
+                        />
+                      }
+                    />
+                    <FormControlLabel
+                      sx={{
+                        padding: "0px",
+                        margin: "0px",
+                      }}
+                      label="Freelance"
+                      control={
+                        <Checkbox
+                          sx={{
+                            padding: { xs: "0px", sm: "7px", md: "6px" },
+                            margin: "0px",
+                          }}
+                          checked={field.value?.includes("Freelance")}
+                          onChange={handleCheckbox(field, "Freelance")}
+                        />
+                      }
+                    />
+                  </FormGroup>
+                )}
               />
-              <label htmlFor="Freelance" className="space">
-                Freelance
-              </label>
-            </div>
-            <div className="field">
-              <p>
-                <label htmlFor="description">Description :</label>
-              </p>
-              <textarea
-                style={{ marginTop: "12px" }}
-                {...register("description", {
-                  required: "description is required",
-                  pattern: {
-                    value: /^(?!\s).{1,50}$/,
-                    message:
-                      "Description must be 1-50 characters and not start with space",
-                  },
-                })}
-                id="description"
-                disabled={isView}
-              ></textarea>
-              {
-                <div className="errormassege">
-                  {errors.description?.message}
-                </div>
-              }
-            </div>
-            <Stack spacing={2} direction={"row"}>
+            </FormControl>
+
+            <TextField
+              size="small"
+              label="description"
+              fullWidth
+              multiline
+              {...register("description", {
+                required: "description is required",
+                pattern: {
+                  value: /^(?!\s).{1,50}$/,
+                  message:
+                    "Description must be 1-50 characters and not start with space",
+                },
+              })}
+              error={!!errors.description}
+              helperText={errors.description?.message}
+              disabled={isView}
+            />
+
+            <Stack spacing={4} direction={"row"}>
               <Button
                 type="submit"
                 variant="contained"

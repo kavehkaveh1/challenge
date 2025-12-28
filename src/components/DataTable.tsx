@@ -8,8 +8,11 @@ import type { RootState, AppDispatch } from "../redux/store";
 import Box from "@mui/material/Box";
 import {
   Divider,
+  FormControl,
+  InputLabel,
+  MenuItem,
   Paper,
-  Stack,
+  Select,
   Table,
   TableBody,
   TableCell,
@@ -143,29 +146,25 @@ const DataTable = () => {
             onChange={(e) => setSearch(e.target.value)}
           />
           <Divider orientation="vertical" variant="middle" flexItem />
-          <Stack
-            direction={"row"}
-            spacing={2}
-            sx={{ marginTop: "30px", marginBottom: "10px" }}
-          >
-            <label htmlFor="filter" style={{ marginTop: "10px" }}>
-              Filter by Work :
-            </label>
-            <select
-              className="filter"
-              name="filter"
-              id="filter"
-              value={selectedWorkType}
-              onChange={(e) => setSelectedWorkType(e.target.value)}
-            >
-              <option value="" disabled>
-                Select Work Type
-              </option>
-              <option value="Part time">Part time</option>
-              <option value="Full time">Full time</option>
-              <option value="Freelance">Freelance</option>
-            </select>
-          </Stack>
+          <Box sx={{ minWidth: 140, marginTop: "16px" }}>
+            <FormControl fullWidth>
+              <InputLabel id="demo-simple-select-label">
+                filter by work
+              </InputLabel>
+              <Select
+                labelId="demo-simple-select-label"
+                id="demo-simple-select"
+                name="filter"
+                label="filter"
+                value={selectedWorkType}
+                onChange={(e) => setSelectedWorkType(e.target.value)}
+              >
+                <MenuItem value="Part time">Part time</MenuItem>
+                <MenuItem value="Full time">Full time</MenuItem>
+                <MenuItem value="Freelance">Freelance</MenuItem>
+              </Select>
+            </FormControl>
+          </Box>
         </Box>
 
         <div>

@@ -1,5 +1,4 @@
 import Form from "./components/Form";
-import "./style.css";
 import { Routes, Route, Navigate } from "react-router-dom";
 import DataTable from "./components/DataTable";
 import NotFound from "./components/notFound";
