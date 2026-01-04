@@ -1,8 +1,9 @@
 import Form from "./components/Form";
-import { Routes, Route, Navigate } from "react-router-dom";
+import { Routes, Route } from "react-router-dom";
 import DataTable from "./components/DataTable";
 import NotFound from "./components/notFound";
 import { Box } from "@mui/material";
+import { ToastContainer } from "react-toastify";
 
 const App = () => {
   return (
@@ -15,11 +16,18 @@ const App = () => {
         }}
       >
         <Routes>
-          <Route path="/" element={<Navigate to="/form/create" />} />
+          <Route path="/" element={<DataTable />} />
           <Route path="/form/:mode/:id?" element={<Form />} />
-          <Route path="/dataTable" element={<DataTable />} />
           <Route path="*" element={<NotFound />} />
         </Routes>
+
+        <ToastContainer
+          position="top-right"
+          autoClose={3000}
+          hideProgressBar={false}
+          closeOnClick
+          pauseOnHover
+        />
       </Box>
     </>
   );

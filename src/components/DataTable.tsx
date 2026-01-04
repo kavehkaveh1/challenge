@@ -2,12 +2,9 @@ import { useEffect, useMemo, useState } from "react";
 import ShowTableItem from "./ShowTableItem";
 import Popup from "./popUp";
 import useDelete from "../costumHook/useDelete";
-import { useDispatch, useSelector } from "react-redux";
-import { deleteItem, setData } from "../redux/dataSlice";
-import type { RootState, AppDispatch } from "../redux/store";
+import LinearProgress from "@mui/material/LinearProgress";
 import Box from "@mui/material/Box";
 import {
-  Divider,
   FormControl,
   InputLabel,
   MenuItem,
@@ -21,6 +18,8 @@ import {
   TableRow,
   TextField,
 } from "@mui/material";
+import Add from "./buttons/add";
+import { showError, showSuccess } from "./toaster";
 
 export interface FormItem {
   id: number;
@@ -38,37 +37,62 @@ export interface FormItem {
 }
 
 const DataTable = () => {
-  const dispatch = useDispatch<AppDispatch>();
-  const data = useSelector((state: RootState) => state.data.items);
-
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState<boolean>(false);
   const [search, setSearch] = useState<string>("");
   const [selectedWorkType, setSelectedWorkType] = useState<string>("");
-
+  const [info, setinfo] = useState<FormItem[]>([]);
+  const [isDelete, setIsDelete] = useState<boolean>(false);
   const { open, openId, close } = useDelete();
 
+  const fetchData = async () => {
+    setLoading(true);
+    try {
+      const response = await fetch("http://localhost:3000/information");
+      if (!response.ok) throw new Error("failed to fetch the data ");
+      const result = await response.json();
+
+      setinfo(result);
+    } catch (err) {
+      setError((err as Error).message);
+      showError("Failed to receive the data.");
+    } finally {
+      setLoading(false);
+    }
+  };
+
   useEffect(() => {
-    const fetchData = async () => {
-      try {
-        setLoading(true);
-        const response = await fetch("http://localhost:3000/information");
-        if (!response.ok) throw new Error("failed to fetch the data ");
-        const result = await response.json();
-        if (result && result.length) {
-          dispatch(setData(result));
-        }
-        setLoading(false);
-      } catch (err) {
-        setError((err as Error).message);
-        setLoading(false);
-      }
-    };
     fetchData();
-  }, [dispatch]);
+  }, []);
+
+  const handleConfrimDelete = async () => {
+    if (openId === null) return;
+    try {
+      const res = await fetch(`http://localhost:3000/information/${openId}`, {
+        method: "DELETE",
+      });
+      if (!res.ok) {
+        throw new Error("Delete failed");
+      }
+      setIsDelete(true);
+      close();
+      showSuccess("data deleted successfully");
+    } catch (error) {
+      console.log("delete failed", error);
+      showError("Failed to delete the data");
+    }
+  };
+
+  useEffect(() => {
+    if (isDelete) {
+      fetchData();
+
+      setIsDelete(false);
+    }
+  }, [isDelete]);
 
   const filteredData = useMemo(() => {
-    return data.filter((item) => {
+    return info.filter((item) => {
       const fullName = ` ${item.FirstName} ${item.LastName}`.toLowerCase();
 
       const matchSearch = fullName.includes(search.toLowerCase());
@@ -78,24 +102,11 @@ const DataTable = () => {
 
       return matchSearch && matchWorkType;
     });
-  }, [data, search, selectedWorkType]);
+  }, [info, search, selectedWorkType]);
 
-  const showingData = search || selectedWorkType ? filteredData : data;
+  const showingData = search || selectedWorkType ? filteredData : info;
 
   if (error) return <div>Error : {error}</div>;
-
-  const handleConfrimDelete = async () => {
-    if (openId === null) return;
-    try {
-      await fetch(`http://localhost:3000/information/${openId}`, {
-        method: "DELETE",
-      });
-      dispatch(deleteItem(openId));
-      close();
-    } catch (error) {
-      console.log("delete failed", error);
-    }
-  };
 
   const thead = (
     <TableHead>
@@ -121,61 +132,74 @@ const DataTable = () => {
       <div>
         <Box
           sx={{
+            position: "relative",
             display: "flex",
-            justifyContent: "center",
-            alignItems: "center",
-            gap: { xs: "0px", sm: "2rem" },
-            flexDirection: {
-              xs: "column",
-              sm: "row",
-            },
           }}
         >
-          <TextField
+          <Box
             sx={{
-              margin: "7px",
-              marginTop: "22px",
               display: "flex",
-              justifyContent: "center",
-              alignItems: "center",
+              gap: "5px",
+              position: "absolute",
+              left: "8%",
+              top: "3rem",
             }}
-            label="Search by name or family"
-            type="text"
-            placeholder="Search"
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
-          />
-          <Divider orientation="vertical" variant="middle" flexItem />
-          <Box sx={{ minWidth: 140, marginTop: "16px" }}>
-            <FormControl fullWidth>
-              <InputLabel id="demo-simple-select-label">
-                filter by work
-              </InputLabel>
-              <Select
-                labelId="demo-simple-select-label"
-                id="demo-simple-select"
-                name="filter"
-                label="filter"
-                value={selectedWorkType}
-                onChange={(e) => setSelectedWorkType(e.target.value)}
-              >
-                <MenuItem value="Part time">Part time</MenuItem>
-                <MenuItem value="Full time">Full time</MenuItem>
-                <MenuItem value="Freelance">Freelance</MenuItem>
-              </Select>
-            </FormControl>
+          >
+            <TextField
+              sx={{
+                width: "140px",
+              }}
+              size="small"
+              label="Search"
+              type="text"
+              placeholder="Search"
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+            />
+
+            <Box sx={{ minWidth: 140 }}>
+              <FormControl fullWidth size="small">
+                <InputLabel id="demo-simple-select-label">
+                  filter by work
+                </InputLabel>
+                <Select
+                  labelId="demo-simple-select-label"
+                  id="demo-simple-select"
+                  name="filter"
+                  label="filter"
+                  value={selectedWorkType}
+                  onChange={(e) => setSelectedWorkType(e.target.value)}
+                >
+                  <MenuItem value="Part time">Part time</MenuItem>
+                  <MenuItem value="Full time">Full time</MenuItem>
+                  <MenuItem value="Freelance">Freelance</MenuItem>
+                </Select>
+              </FormControl>
+            </Box>
+          </Box>
+          <Box
+            sx={{
+              display: "flex",
+              position: "absolute",
+              right: "8%",
+              top: "3.4rem",
+            }}
+          >
+            <Add />
           </Box>
         </Box>
 
         <div>
           {loading ? (
-            <h1>Loading...</h1>
+            <Box sx={{ marginTop: "2rem" }}>
+              <LinearProgress />
+            </Box>
           ) : (search || selectedWorkType) && filteredData.length === 0 ? (
             <h1 style={{ textAlign: "center" }}>No Result Found</h1>
           ) : (
             <Box
               sx={{
-                marginTop: "2rem",
+                marginTop: "6rem",
                 display: "flex",
                 justifyContent: "center",
                 alignItems: "center",

@@ -1,9 +1,7 @@
 import { Controller, useForm, type SubmitHandler } from "react-hook-form";
 import { useNavigate, useParams } from "react-router-dom";
-import { useSelector, useDispatch } from "react-redux";
-import { type RootState, type AppDispatch } from "../redux/store";
-import { useEffect } from "react";
-import { addItem, updateItem } from "../redux/dataSlice";
+import { useEffect, useState } from "react";
+
 import {
   Button,
   Checkbox,
@@ -18,12 +16,15 @@ import {
   RadioGroup,
   Select,
   Stack,
+  TextareaAutosize,
   TextField,
 } from "@mui/material";
 import SendIcon from "@mui/icons-material/Send";
 import CancelIcon from "@mui/icons-material/Cancel";
 import Box from "@mui/material/Box";
-
+import CircularProgress from "@mui/material/CircularProgress";
+import { type FormItem } from "./DataTable";
+import { showError, showSuccess } from "./toaster";
 export interface FormValuesType {
   id?: number;
   FirstName: string;
@@ -40,14 +41,17 @@ export interface FormValuesType {
 }
 
 const Form = () => {
+  const [items, setItems] = useState<FormItem[]>([]);
+  const [itemsReady, setItemsReady] = useState<boolean>(false);
+
   const navigate = useNavigate();
-  const dispatch = useDispatch<AppDispatch>();
+
   const {
     register,
     handleSubmit,
     reset,
     control,
-    formState: { errors },
+    formState: { errors, isDirty, isSubmitting },
   } = useForm<FormValuesType>({
     defaultValues: {
       workType: [],
@@ -66,47 +70,80 @@ const Form = () => {
   const isCreate = mode === "create";
 
   const handleSubmitForm: SubmitHandler<FormValuesType> = async (data) => {
-    if (isView) return;
-
     if (isCreate) {
-      const postItems = await fetch("http://localhost:3000/information", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify(data),
-      });
-      const savedItem = await postItems.json();
-      dispatch(addItem(savedItem));
+      try {
+        const res = await fetch("http://localhost:3000/information", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify(data),
+        });
+        if (!res.ok) {
+          throw new Error("Create failed");
+        }
+        showSuccess("Data saved successfully");
+      } catch (error) {
+        console.log("Post Error :", error);
+        showError("failed to save data");
+      }
     }
 
     if (isEdit && id) {
       const updated = { ...data, id: Number(id) };
-
-      await fetch(`http://localhost:3000/information/${id}`, {
-        method: "PUT",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify(updated),
-      });
-
-      dispatch(updateItem(updated));
+      try {
+        const res = await fetch(`http://localhost:3000/information/${id}`, {
+          method: "PUT",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify(updated),
+        });
+        if (!res.ok) {
+          throw new Error("Update failed");
+        }
+        showSuccess("Data updated successfully");
+      } catch (error) {
+        console.log("Put Error :", error);
+        showError("failed to update the data");
+      }
     }
 
-    navigate("/DataTable");
+    navigate("/");
   };
 
-  const items = useSelector((state: RootState) => state.data.items);
+  const createSubmit = isSubmitting;
+  const editSubmit = isSubmitting || !isDirty;
+  const disabledSubmit = isCreate ? createSubmit : isEdit ? editSubmit : true;
 
   useEffect(() => {
-    if ((isView || isEdit) && id) {
+    const fetchData = async () => {
+      try {
+        const response = await fetch("http://localhost:3000/information");
+        if (!response.ok) throw new Error("failed to fetch the data ");
+        const result = await response.json();
+        if (result && result.length) {
+          setItems(result);
+          setItemsReady(true);
+        }
+      } catch (err) {
+        console.log("Fetch Error :", err);
+        showError("Failed to receive the data.");
+      }
+    };
+
+    fetchData();
+  }, []);
+
+  useEffect(() => {
+    if ((isView || isEdit) && id && itemsReady) {
       const item = items.find((i) => String(i.id) === String(id));
+
       if (item) {
         reset(item);
       }
     }
-  }, [isView, id, isEdit]);
+  }, [isView, id, isEdit, items, itemsReady]);
 
   const handleCheckbox =
     (field: any, value: string) =>
@@ -165,6 +202,9 @@ const Form = () => {
                 size="small"
                 label="FirstName"
                 fullWidth
+                slotProps={{
+                  inputLabel: { shrink: isEdit || isView ? true : undefined },
+                }}
                 {...register("FirstName", {
                   required: "FirstName is required",
                   pattern: {
@@ -180,6 +220,9 @@ const Form = () => {
                 size="small"
                 label="LastName"
                 fullWidth
+                slotProps={{
+                  inputLabel: { shrink: isEdit || isView ? true : undefined },
+                }}
                 {...register("LastName", {
                   required: "LastName is required",
                   pattern: {
@@ -198,6 +241,9 @@ const Form = () => {
               type="number"
               label="Age"
               fullWidth
+              slotProps={{
+                inputLabel: { shrink: isEdit || isView ? true : undefined },
+              }}
               {...register("age", {
                 required: "Age is required",
               })}
@@ -207,7 +253,7 @@ const Form = () => {
             />
 
             <FormControl error={!!errors.gender} disabled={isView} fullWidth>
-              <Stack
+              <Box
                 sx={{
                   display: "flex",
                   flexDirection: "row",
@@ -238,7 +284,7 @@ const Form = () => {
                     </RadioGroup>
                   )}
                 />
-              </Stack>
+              </Box>
 
               {errors.gender && (
                 <FormHelperText sx={{ paddingBottom: "3px" }}>
@@ -360,6 +406,9 @@ const Form = () => {
               size="small"
               label="PhoneNumber"
               fullWidth
+              slotProps={{
+                inputLabel: { shrink: isEdit || isView ? true : undefined },
+              }}
               {...register("PhoneNumber", {
                 required: "PhoneNumber is required",
                 pattern: {
@@ -435,34 +484,46 @@ const Form = () => {
               />
             </FormControl>
 
-            <TextField
-              size="small"
-              label="description"
-              fullWidth
-              multiline
-              {...register("description", {
-                required: "description is required",
-                pattern: {
-                  value: /^(?!\s).{1,50}$/,
-                  message:
-                    "Description must be 1-50 characters and not start with space",
-                },
-              })}
-              error={!!errors.description}
-              helperText={errors.description?.message}
-              disabled={isView}
-            />
+            <Box>
+              <TextareaAutosize
+                placeholder="description"
+                {...register("description", {
+                  required: "Description is required",
+                  pattern: {
+                    value: /^(?!\s).{1,50}$/,
+                    message:
+                      "Description must be 1-50 characters and not start with space",
+                  },
+                })}
+                minRows={3}
+                style={{ width: "100%" }}
+                disabled={isView}
+              />
+              {errors.description ? (
+                <Box
+                  sx={{
+                    color: "#d32f2f",
+                    fontSize: "14px",
+                    paddingLeft: "10px",
+                  }}
+                >
+                  {errors.description?.message}
+                </Box>
+              ) : null}
+            </Box>
 
             <Stack spacing={4} direction={"row"}>
               <Button
                 type="submit"
                 variant="contained"
-                startIcon={<SendIcon />}
-                disabled={isView}
+                startIcon={
+                  isSubmitting ? <CircularProgress size={20} /> : <SendIcon />
+                }
+                disabled={disabledSubmit}
                 size="small"
                 sx={{ height: "40px" }}
               >
-                {isEdit ? "Update" : "Submit"}
+                {isSubmitting ? "sending..." : isEdit ? "Update" : "Submit"}
               </Button>
               <Button
                 variant="contained"
@@ -470,7 +531,7 @@ const Form = () => {
                 sx={{ height: "40px" }}
                 color="error"
                 startIcon={<CancelIcon />}
-                onClick={() => navigate("/DataTable")}
+                onClick={() => navigate("/")}
               >
                 Cancel
               </Button>
