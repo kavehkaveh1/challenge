@@ -1,10 +1,13 @@
 import { useEffect, useMemo, useState } from "react";
 import ShowTableItem from "./ShowTableItem";
-import Popup from "./popUp";
-import useDelete from "../costumHook/useDelete";
+import Popup from "../components/popUp";
+import useDelete from "../Hooks/useDelete";
 import LinearProgress from "@mui/material/LinearProgress";
 import Box from "@mui/material/Box";
+import AddIcon from "@mui/icons-material/Add";
+import ErrorOutlineIcon from "@mui/icons-material/ErrorOutline";
 import {
+  Button,
   FormControl,
   InputLabel,
   MenuItem,
@@ -18,8 +21,9 @@ import {
   TableRow,
   TextField,
 } from "@mui/material";
-import Add from "./buttons/add";
-import { showError, showSuccess } from "./toaster";
+
+import { showError, showSuccess } from "../components/toaster";
+import Buttons from "../components/buttons/buttons";
 
 export interface FormItem {
   id: number;
@@ -37,24 +41,21 @@ export interface FormItem {
 }
 
 const DataTable = () => {
-  const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState<boolean>(false);
   const [search, setSearch] = useState<string>("");
   const [selectedWorkType, setSelectedWorkType] = useState<string>("");
-  const [info, setinfo] = useState<FormItem[]>([]);
-  const [isDelete, setIsDelete] = useState<boolean>(false);
+  const [info, setInfo] = useState<FormItem[]>([]);
+
   const { open, openId, close } = useDelete();
 
   const fetchData = async () => {
     setLoading(true);
     try {
       const response = await fetch("http://localhost:3000/information");
-      if (!response.ok) throw new Error("failed to fetch the data ");
       const result = await response.json();
 
-      setinfo(result);
+      setInfo(result);
     } catch (err) {
-      setError((err as Error).message);
       showError("Failed to receive the data.");
     } finally {
       setLoading(false);
@@ -68,28 +69,18 @@ const DataTable = () => {
   const handleConfrimDelete = async () => {
     if (openId === null) return;
     try {
-      const res = await fetch(`http://localhost:3000/information/${openId}`, {
+      await fetch(`http://localhost:3000/information/${openId}`, {
         method: "DELETE",
       });
-      if (!res.ok) {
-        throw new Error("Delete failed");
-      }
-      setIsDelete(true);
+
       close();
       showSuccess("data deleted successfully");
+      await fetchData();
     } catch (error) {
       console.log("delete failed", error);
       showError("Failed to delete the data");
     }
   };
-
-  useEffect(() => {
-    if (isDelete) {
-      fetchData();
-
-      setIsDelete(false);
-    }
-  }, [isDelete]);
 
   const filteredData = useMemo(() => {
     return info.filter((item) => {
@@ -105,8 +96,6 @@ const DataTable = () => {
   }, [info, search, selectedWorkType]);
 
   const showingData = search || selectedWorkType ? filteredData : info;
-
-  if (error) return <div>Error : {error}</div>;
 
   const thead = (
     <TableHead>
@@ -147,7 +136,11 @@ const DataTable = () => {
           >
             <TextField
               sx={{
-                width: "140px",
+                width: {
+                  xs: "110px",
+                  sm: "135px",
+                  md: "145px",
+                },
               }}
               size="small"
               label="Search"
@@ -157,7 +150,15 @@ const DataTable = () => {
               onChange={(e) => setSearch(e.target.value)}
             />
 
-            <Box sx={{ minWidth: 140 }}>
+            <Box
+              sx={{
+                width: {
+                  xs: "110px",
+                  sm: "135px",
+                  md: "145px",
+                },
+              }}
+            >
               <FormControl fullWidth size="small">
                 <InputLabel id="demo-simple-select-label">
                   filter by work
@@ -173,6 +174,9 @@ const DataTable = () => {
                   <MenuItem value="Part time">Part time</MenuItem>
                   <MenuItem value="Full time">Full time</MenuItem>
                   <MenuItem value="Freelance">Freelance</MenuItem>
+                  <Button variant="contained" size="small" fullWidth>
+                    <MenuItem value="">X</MenuItem>
+                  </Button>
                 </Select>
               </FormControl>
             </Box>
@@ -185,7 +189,7 @@ const DataTable = () => {
               top: "3.4rem",
             }}
           >
-            <Add />
+            <Buttons nav={"/form/create"} text={"Add"} icon={<AddIcon />} />
           </Box>
         </Box>
 
@@ -224,6 +228,7 @@ const DataTable = () => {
                   </TableBody>
                 </Table>
               </TableContainer>
+
               <Popup
                 isOpen={openId !== null}
                 onClose={close}
@@ -231,6 +236,30 @@ const DataTable = () => {
               />
             </Box>
           )}
+          <Box
+            sx={{
+              display: "flex",
+              justifyContent: "center",
+              alignItems: "center",
+            }}
+          >
+            {info.length === 0 ? (
+              <Box
+                component={Paper}
+                sx={{
+                  width: "84%",
+                  height: "3rem",
+                  display: "flex",
+                  justifyContent: "center",
+                  alignItems: "center",
+                  fontSize: "1.7rem",
+                  fontWeight: "bold",
+                }}
+              >
+                No Data <ErrorOutlineIcon />
+              </Box>
+            ) : null}
+          </Box>
         </div>
       </div>
     </>

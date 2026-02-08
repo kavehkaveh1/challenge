@@ -1,3 +1,152 @@
 {
-  "information": []
+  "information": [],
+  "countries": [
+    {
+      "id": "canada",
+      "name": "Canada"
+    },
+    {
+      "id": "usa",
+      "name": "Usa"
+    },
+    {
+      "id": "spain",
+      "name": "Spain"
+    },
+    {
+      "id": "greece",
+      "name": "Greece"
+    },
+    {
+      "id": "germany",
+      "name": "Germany"
+    }
+  ],
+  "cities": [
+    {
+      "id": "1",
+      "name": "Toronto",
+      "country": "canada"
+    },
+    {
+      "id": "2",
+      "name": "Vancouver",
+      "country": "canada"
+    },
+    {
+      "id": "3",
+      "name": "Montreal",
+      "country": "canada"
+    },
+    {
+      "id": "4",
+      "name": "Ottawa",
+      "country": "canada"
+    },
+    {
+      "id": "5",
+      "name": "Calgary",
+      "country": "canada"
+    },
+    {
+      "id": "6",
+      "name": "New York",
+      "country": "usa"
+    },
+    {
+      "id": "7",
+      "name": "Los Angeles",
+      "country": "usa"
+    },
+    {
+      "id": "8",
+      "name": "Chicago",
+      "country": "usa"
+    },
+    {
+      "id": "9",
+      "name": "Houston",
+      "country": "usa"
+    },
+    {
+      "id": "10",
+      "name": "San Ferancisco",
+      "country": "usa"
+    },
+    {
+      "id": "11",
+      "name": "Madrid",
+      "country": "spain"
+    },
+    {
+      "id": "12",
+      "name": "Barcelona",
+      "country": "spain"
+    },
+    {
+      "id": "13",
+      "name": "Valencia",
+      "country": "spain"
+    },
+    {
+      "id": "14",
+      "name": "Seville",
+      "country": "spain"
+    },
+    {
+      "id": "15",
+      "name": "Bilbao",
+      "country": "spain"
+    },
+    {
+      "id": "16",
+      "name": "Athens",
+      "country": "greece"
+    },
+    {
+      "id": "17",
+      "name": "Thessalonuki",
+      "country": "greece"
+    },
+    {
+      "id": "18",
+      "name": "Patras",
+      "country": "greece"
+    },
+    {
+      "id": "19",
+      "name": "Heraklion",
+      "country": "greece"
+    },
+    {
+      "id": "20",
+      "name": "Larissa",
+      "country": "greece"
+    },
+    {
+      "id": "21",
+      "name": "Berlin",
+      "country": "germany"
+    },
+    {
+      "id": "22",
+      "name": "Munich",
+      "country": "germany"
+    },
+    {
+      "id": "23",
+      "name": "Humburg",
+      "country": "germany"
+    },
+    {
+      "id": "24",
+      "name": "Frankfurt",
+      "country": "germany"
+    },
+    {
+      "id": "25",
+      "name": "Cologne",
+      "country": "germany"
+    }
+  ]
 }

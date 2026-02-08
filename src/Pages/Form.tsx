@@ -24,7 +24,7 @@ import CancelIcon from "@mui/icons-material/Cancel";
 import Box from "@mui/material/Box";
 import CircularProgress from "@mui/material/CircularProgress";
 import { type FormItem } from "./DataTable";
-import { showError, showSuccess } from "./toaster";
+import { showError, showSuccess } from "../components/toaster";
 export interface FormValuesType {
   id?: number;
   FirstName: string;
@@ -40,9 +40,21 @@ export interface FormValuesType {
   description: string;
 }
 
+type CountryType = {
+  id: string;
+  name: string;
+};
+type CityType = {
+  id: number;
+  name: string;
+  Country: string;
+};
+
 const Form = () => {
   const [items, setItems] = useState<FormItem[]>([]);
   const [itemsReady, setItemsReady] = useState<boolean>(false);
+  const [countries, setCountries] = useState<CountryType[]>([]);
+  const [cities, setCities] = useState<CityType[]>([]);
 
   const navigate = useNavigate();
 
@@ -50,6 +62,7 @@ const Form = () => {
     register,
     handleSubmit,
     reset,
+    watch,
     control,
     formState: { errors, isDirty, isSubmitting },
   } = useForm<FormValuesType>({
@@ -58,30 +71,63 @@ const Form = () => {
     },
   });
 
-  type Mode = "create" | "edit" | "view";
+  type Mode = "create" | "edit";
 
   const { mode, id } = useParams<{
     mode: Mode;
     id?: string;
   }>();
 
-  const isView = mode === "view";
   const isEdit = mode === "edit";
   const isCreate = mode === "create";
+
+  const selectedCountry = watch("country");
+
+  useEffect(() => {
+    const fetchCountries = async () => {
+      try {
+        const res = await fetch("http://localhost:3000/countries");
+        const data: CountryType[] = await res.json();
+        setCountries(data);
+      } catch (error) {
+        console.log("Get Error :", error);
+        showError("failed to load the data(countries)");
+        setCountries([]);
+      }
+    };
+    fetchCountries();
+  }, []);
+
+  const fetchCities = async (country: string) => {
+    try {
+      const response = await fetch(
+        `http://localhost:3000/cities?country=${country}`,
+      );
+      const data = await response.json();
+      setCities(data);
+    } catch (error) {
+      console.log("Get Error :", error);
+      showError("failed to load the data(cities)");
+      setCities([]);
+    }
+  };
+
+  useEffect(() => {
+    if (!selectedCountry) return;
+    fetchCities(selectedCountry);
+  }, [selectedCountry]);
 
   const handleSubmitForm: SubmitHandler<FormValuesType> = async (data) => {
     if (isCreate) {
       try {
-        const res = await fetch("http://localhost:3000/information", {
+        await fetch("http://localhost:3000/information", {
           method: "POST",
           headers: {
             "Content-Type": "application/json",
           },
           body: JSON.stringify(data),
         });
-        if (!res.ok) {
-          throw new Error("Create failed");
-        }
+
         showSuccess("Data saved successfully");
       } catch (error) {
         console.log("Post Error :", error);
@@ -92,16 +138,14 @@ const Form = () => {
     if (isEdit && id) {
       const updated = { ...data, id: Number(id) };
       try {
-        const res = await fetch(`http://localhost:3000/information/${id}`, {
+        await fetch(`http://localhost:3000/information/${id}`, {
           method: "PUT",
           headers: {
             "Content-Type": "application/json",
           },
           body: JSON.stringify(updated),
         });
-        if (!res.ok) {
-          throw new Error("Update failed");
-        }
+
         showSuccess("Data updated successfully");
       } catch (error) {
         console.log("Put Error :", error);
@@ -120,7 +164,6 @@ const Form = () => {
     const fetchData = async () => {
       try {
         const response = await fetch("http://localhost:3000/information");
-        if (!response.ok) throw new Error("failed to fetch the data ");
         const result = await response.json();
         if (result && result.length) {
           setItems(result);
@@ -136,14 +179,14 @@ const Form = () => {
   }, []);
 
   useEffect(() => {
-    if ((isView || isEdit) && id && itemsReady) {
+    if (isEdit && id && itemsReady) {
       const item = items.find((i) => String(i.id) === String(id));
 
       if (item) {
         reset(item);
       }
     }
-  }, [isView, id, isEdit, items, itemsReady]);
+  }, [id, isEdit, items, itemsReady]);
 
   const handleCheckbox =
     (field: any, value: string) =>
@@ -153,7 +196,7 @@ const Form = () => {
       field.onChange(
         checked
           ? [...(field.value || []), value]
-          : (field.value || []).filter((v: string) => v !== value)
+          : (field.value || []).filter((v: string) => v !== value),
       );
     };
 
@@ -161,7 +204,7 @@ const Form = () => {
     <Box
       sx={{
         minWidth: "100vw",
-        height: "100vh",
+        minHeight: "100vh",
         display: "flex",
         justifyContent: "center",
         alignItems: "center",
@@ -173,7 +216,8 @@ const Form = () => {
           border: "2px solid white",
           borderRadius: 3,
           backgroundColor: "white",
-
+          marginTop: "1rem",
+          marginBottom: "1rem",
           p: 2,
           width: {
             xs: "330px",
@@ -188,7 +232,7 @@ const Form = () => {
             sx={{
               display: "grid",
               gap: {
-                xs: "4px",
+                xs: "0.5rem",
                 md: "1.3rem",
               },
               gridTemplateColumns: {
@@ -197,44 +241,40 @@ const Form = () => {
               },
             }}
           >
-            <Box sx={{ display: "flex", gap: "10px" }}>
-              <TextField
-                size="small"
-                label="FirstName"
-                fullWidth
-                slotProps={{
-                  inputLabel: { shrink: isEdit || isView ? true : undefined },
-                }}
-                {...register("FirstName", {
-                  required: "FirstName is required",
-                  pattern: {
-                    value: /^[A-Za-z]+(?:\s[A-Za-z]+)*$/,
-                    message: " Please enter a valid name using letters only.",
-                  },
-                })}
-                error={!!errors.FirstName}
-                helperText={errors.FirstName?.message}
-                disabled={isView}
-              />
-              <TextField
-                size="small"
-                label="LastName"
-                fullWidth
-                slotProps={{
-                  inputLabel: { shrink: isEdit || isView ? true : undefined },
-                }}
-                {...register("LastName", {
-                  required: "LastName is required",
-                  pattern: {
-                    value: /^[A-Za-z]+(?:\s[A-Za-z]+)*$/,
-                    message: " Please enter a valid name using letters only.",
-                  },
-                })}
-                error={!!errors.LastName}
-                helperText={errors.LastName?.message}
-                disabled={isView}
-              />
-            </Box>
+            <TextField
+              size="small"
+              label="FirstName"
+              fullWidth
+              slotProps={{
+                inputLabel: { shrink: isEdit ? true : undefined },
+              }}
+              {...register("FirstName", {
+                required: "FirstName is required",
+                pattern: {
+                  value: /^[A-Za-z]+(?:\s[A-Za-z]+)*$/,
+                  message: " Please enter a valid name using letters only.",
+                },
+              })}
+              error={!!errors.FirstName}
+              helperText={errors.FirstName?.message}
+            />
+            <TextField
+              size="small"
+              label="LastName"
+              fullWidth
+              slotProps={{
+                inputLabel: { shrink: isEdit ? true : undefined },
+              }}
+              {...register("LastName", {
+                required: "LastName is required",
+                pattern: {
+                  value: /^[A-Za-z]+(?:\s[A-Za-z]+)*$/,
+                  message: " Please enter a valid name using letters only.",
+                },
+              })}
+              error={!!errors.LastName}
+              helperText={errors.LastName?.message}
+            />
 
             <TextField
               size="small"
@@ -242,17 +282,16 @@ const Form = () => {
               label="Age"
               fullWidth
               slotProps={{
-                inputLabel: { shrink: isEdit || isView ? true : undefined },
+                inputLabel: { shrink: isEdit ? true : undefined },
               }}
               {...register("age", {
                 required: "Age is required",
               })}
               error={!!errors.age}
               helperText={errors.age?.message}
-              disabled={isView}
             />
 
-            <FormControl error={!!errors.gender} disabled={isView} fullWidth>
+            <FormControl error={!!errors.gender} fullWidth>
               <Box
                 sx={{
                   display: "flex",
@@ -304,110 +343,98 @@ const Form = () => {
               })}
               error={!!errors.birthdate}
               helperText={errors.birthdate?.message}
-              disabled={isView}
             />
 
-            <Box sx={{ display: "flex", gap: "5px" }}>
-              <FormControl
-                error={!!errors.country}
-                disabled={isView}
-                fullWidth
-                size="small"
-              >
-                <InputLabel id="country-lable">Country</InputLabel>
-                <Controller
-                  name="country"
-                  control={control}
-                  rules={{ required: "Country is required" }}
-                  render={({ field }) => (
-                    <Select
-                      {...field}
-                      value={field.value ?? ""}
-                      labelId="country-lable"
-                      label="Country"
-                    >
-                      <MenuItem value="Canada">Canada</MenuItem>
-                      <MenuItem value="USA">USA</MenuItem>
-                      <MenuItem value="Spain">Spain</MenuItem>
-                      <MenuItem value="Greece">Greece</MenuItem>
-                      <MenuItem value="Germany">Germany</MenuItem>
-                    </Select>
-                  )}
-                />
-                {errors.gender && (
-                  <FormHelperText>{errors.country?.message}</FormHelperText>
+            <FormControl error={!!errors.country} fullWidth size="small">
+              <InputLabel id="country-lable">Country</InputLabel>
+              <Controller
+                name="country"
+                control={control}
+                rules={{ required: "Country is required" }}
+                render={({ field }) => (
+                  <Select
+                    {...field}
+                    value={field.value ?? ""}
+                    labelId="country-lable"
+                    label="Country"
+                  >
+                    {countries.map((country) => (
+                      <MenuItem key={country.id} value={country.id}>
+                        {country.name}
+                      </MenuItem>
+                    ))}
+                  </Select>
                 )}
-              </FormControl>
+              />
+              {errors.country && (
+                <FormHelperText>{errors.country?.message}</FormHelperText>
+              )}
+            </FormControl>
 
-              <FormControl
-                error={!!errors.city}
-                disabled={isView}
-                fullWidth
-                size="small"
-              >
-                <InputLabel id="city-lable">City</InputLabel>
-                <Controller
-                  name="city"
-                  control={control}
-                  rules={{ required: "City is required" }}
-                  render={({ field }) => (
-                    <Select
-                      {...field}
-                      value={field.value ?? ""}
-                      labelId="city-lable"
-                      label="City"
-                    >
-                      <MenuItem value="Toronto">Toronto</MenuItem>
-                      <MenuItem value="New York">New York</MenuItem>
-                      <MenuItem value="Madrid">Madrid</MenuItem>
-                      <MenuItem value="Athens">Athens</MenuItem>
-                      <MenuItem value="Berlin">Berlin</MenuItem>
-                    </Select>
-                  )}
-                />
-                {errors.gender && (
-                  <FormHelperText>{errors.city?.message}</FormHelperText>
-                )}
-              </FormControl>
+            <FormControl error={!!errors.city} fullWidth size="small">
+              <InputLabel id="city-lable">City</InputLabel>
+              <Controller
+                name="city"
+                control={control}
+                rules={{ required: "City is required" }}
+                render={({ field }) => (
+                  <Select
+                    {...field}
+                    value={field.value ?? ""}
+                    labelId="city-lable"
+                    label="City"
+                  >
+                    {!selectedCountry && (
+                      <MenuItem disabled value="">
+                        select a country first
+                      </MenuItem>
+                    )}
 
-              <FormControl
-                error={!!errors.job}
-                disabled={isView}
-                fullWidth
-                size="small"
-              >
-                <InputLabel id="job-lable">Job</InputLabel>
-                <Controller
-                  name="job"
-                  control={control}
-                  rules={{ required: "Job is required" }}
-                  render={({ field }) => (
-                    <Select
-                      {...field}
-                      value={field.value ?? ""}
-                      labelId="job-lable"
-                      label="Job"
-                    >
-                      <MenuItem value="frontend">frontend</MenuItem>
-                      <MenuItem value="backend">backend</MenuItem>
-                      <MenuItem value="designer">designer</MenuItem>
-                      <MenuItem value="accountant">accountant</MenuItem>
-                      <MenuItem value="HR">HR</MenuItem>
-                    </Select>
-                  )}
-                />
-                {errors.gender && (
-                  <FormHelperText>{errors.job?.message}</FormHelperText>
+                    {cities.map((city) => (
+                      <MenuItem key={city.id} value={city.name}>
+                        {city.name}
+                      </MenuItem>
+                    ))}
+                  </Select>
                 )}
-              </FormControl>
-            </Box>
+              />
+              {errors.city && (
+                <FormHelperText>{errors.city?.message}</FormHelperText>
+              )}
+            </FormControl>
+
+            <FormControl error={!!errors.job} fullWidth size="small">
+              <InputLabel id="job-lable">Job</InputLabel>
+              <Controller
+                name="job"
+                control={control}
+                rules={{ required: "Job is required" }}
+                render={({ field }) => (
+                  <Select
+                    {...field}
+                    value={field.value ?? ""}
+                    labelId="job-lable"
+                    label="Job"
+                  >
+                    <MenuItem value="frontend">frontend</MenuItem>
+                    <MenuItem value="backend">backend</MenuItem>
+                    <MenuItem value="designer">designer</MenuItem>
+                    <MenuItem value="accountant">accountant</MenuItem>
+                    <MenuItem value="HR">HR</MenuItem>
+                  </Select>
+                )}
+              />
+              {errors.job && (
+                <FormHelperText>{errors.job?.message}</FormHelperText>
+              )}
+            </FormControl>
 
             <TextField
               size="small"
               label="PhoneNumber"
               fullWidth
               slotProps={{
-                inputLabel: { shrink: isEdit || isView ? true : undefined },
+                inputLabel: { shrink: isEdit ? true : undefined },
               }}
               {...register("PhoneNumber", {
                 required: "PhoneNumber is required",
@@ -418,10 +445,9 @@ const Form = () => {
               })}
               error={!!errors.PhoneNumber}
               helperText={errors.PhoneNumber?.message}
-              disabled={isView}
             />
 
-            <FormControl fullWidth disabled={isView} size="small">
+            <FormControl fullWidth size="small">
               <FormLabel>Work Type</FormLabel>
               <Controller
                 name="workType"
@@ -497,7 +523,6 @@ const Form = () => {
                 })}
                 minRows={3}
                 style={{ width: "100%" }}
-                disabled={isView}
               />
               {errors.description ? (
                 <Box

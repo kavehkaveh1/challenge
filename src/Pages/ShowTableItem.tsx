@@ -1,8 +1,9 @@
-import View from "./buttons/view";
-import Edit from "./buttons/edit";
 import { type FormItem } from "./DataTable";
 import { Button, Stack, TableCell, TableRow } from "@mui/material";
 import DeleteForeverIcon from "@mui/icons-material/DeleteForever";
+import Buttons from "../components/buttons/buttons";
+import EditIcon from "@mui/icons-material/Edit";
+import VisibilityIcon from "@mui/icons-material/Visibility";
 
 type PropsType = {
   item: FormItem;
@@ -32,8 +33,16 @@ const ShowTableItem = ({ item, onDelete }: PropsType) => {
         <TableCell>{item.description}</TableCell>
         <TableCell>
           <Stack direction={"row"} spacing={1}>
-            <Edit id={item.id} />
-            <View id={item.id} />
+            <Buttons
+              nav={`/form/edit/${item.id}`}
+              text={"Edit"}
+              icon={<EditIcon />}
+            />
+            <Buttons
+              nav={`/View/${item.id}`}
+              text={"View"}
+              icon={<VisibilityIcon />}
+            />
             <Button
               variant="contained"
               color="error"
