@@ -1,16 +1,16 @@
 import { type FormItem } from "./DataTable";
 import { Button, Stack, TableCell, TableRow } from "@mui/material";
 import DeleteForeverIcon from "@mui/icons-material/DeleteForever";
-import Buttons from "../components/buttons/buttons";
-import EditIcon from "@mui/icons-material/Edit";
-import VisibilityIcon from "@mui/icons-material/Visibility";
+import EditModal from "../components/modals/editModal";
+import ViewModal from "../components/modals/viewModal";
 
 type PropsType = {
   item: FormItem;
   onDelete: () => void;
+  setEdit: React.Dispatch<React.SetStateAction<boolean>>;
 };
 
-const ShowTableItem = ({ item, onDelete }: PropsType) => {
+const ShowTableItem = ({ item, onDelete, setEdit }: PropsType) => {
   return (
     <>
       <TableRow
@@ -33,16 +33,8 @@ const ShowTableItem = ({ item, onDelete }: PropsType) => {
         <TableCell>{item.description}</TableCell>
         <TableCell>
           <Stack direction={"row"} spacing={1}>
-            <Buttons
-              nav={`/form/edit/${item.id}`}
-              text={"Edit"}
-              icon={<EditIcon />}
-            />
-            <Buttons
-              nav={`/View/${item.id}`}
-              text={"View"}
-              icon={<VisibilityIcon />}
-            />
+            <EditModal item={item} id={item.id} setEdit={setEdit} />
+            <ViewModal item={item} />
             <Button
               variant="contained"
               color="error"

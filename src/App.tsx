@@ -1,10 +1,6 @@
-import Form from "./Pages/Form";
-import { Routes, Route } from "react-router-dom";
 import DataTable from "./Pages/DataTable";
-import NotFound from "./Pages/notFound";
 import { Box } from "@mui/material";
 import { ToastContainer } from "react-toastify";
-import View from "./Pages/view";
 
 const App = () => {
   return (
@@ -16,12 +12,7 @@ const App = () => {
           minHeight: "100vh",
         }}
       >
-        <Routes>
-          <Route path="/" element={<DataTable />} />
-          <Route path="/form/:mode/:id?" element={<Form />} />
-          <Route path="/View/:id?" element={<View />} />
-          <Route path="*" element={<NotFound />} />
-        </Routes>
+        <DataTable />
 
         <ToastContainer
           position="bottom-right"

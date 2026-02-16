@@ -4,10 +4,9 @@ import Popup from "../components/popUp";
 import useDelete from "../Hooks/useDelete";
 import LinearProgress from "@mui/material/LinearProgress";
 import Box from "@mui/material/Box";
-import AddIcon from "@mui/icons-material/Add";
 import ErrorOutlineIcon from "@mui/icons-material/ErrorOutline";
+
 import {
-  Button,
   FormControl,
   InputLabel,
   MenuItem,
@@ -23,7 +22,7 @@ import {
 } from "@mui/material";
 
 import { showError, showSuccess } from "../components/toaster";
-import Buttons from "../components/buttons/buttons";
+import FormModal from "../components/modals/formModal";
 
 export interface FormItem {
   id: number;
@@ -45,6 +44,8 @@ const DataTable = () => {
   const [search, setSearch] = useState<string>("");
   const [selectedWorkType, setSelectedWorkType] = useState<string>("");
   const [info, setInfo] = useState<FormItem[]>([]);
+  const [create, setCreate] = useState<boolean>(false);
+  const [edit, setEdit] = useState<boolean>(false);
 
   const { open, openId, close } = useDelete();
 
@@ -52,6 +53,7 @@ const DataTable = () => {
     setLoading(true);
     try {
       const response = await fetch("http://localhost:3000/information");
+      if (!response.ok) throw new Error("failed to fetch the data ");
       const result = await response.json();
 
       setInfo(result);
@@ -64,7 +66,7 @@ const DataTable = () => {
 
   useEffect(() => {
     fetchData();
-  }, []);
+  }, [create, edit]);
 
   const handleConfrimDelete = async () => {
     if (openId === null) return;
@@ -171,12 +173,12 @@ const DataTable = () => {
                   value={selectedWorkType}
                   onChange={(e) => setSelectedWorkType(e.target.value)}
                 >
+                  <MenuItem value="">
+                    <em>None</em>
+                  </MenuItem>
                   <MenuItem value="Part time">Part time</MenuItem>
                   <MenuItem value="Full time">Full time</MenuItem>
                   <MenuItem value="Freelance">Freelance</MenuItem>
-                  <Button variant="contained" size="small" fullWidth>
-                    <MenuItem value="">X</MenuItem>
-                  </Button>
                 </Select>
               </FormControl>
             </Box>
@@ -189,7 +191,7 @@ const DataTable = () => {
               top: "3.4rem",
             }}
           >
-            <Buttons nav={"/form/create"} text={"Add"} icon={<AddIcon />} />
+            <FormModal setCreate={setCreate} />
           </Box>
         </Box>
 
@@ -223,6 +225,7 @@ const DataTable = () => {
                         item={item}
                         key={item.id}
                         onDelete={() => open(item.id)}
+                        setEdit={setEdit}
                       />
                     ))}
                   </TableBody>
