@@ -52,5 +52,5 @@ Runs the application and JSON Server simultaneously.
 
 - components: Reusable UI components
 - Hooks: Custom React hooks
-- Pages: Application pages (routes)
+- Pages: Application pages 
 - dataServer: JSON Server related files
